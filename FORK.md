@@ -78,3 +78,22 @@ Status: fork-only, not yet deployed. No upstream PR exists. Remove or replace
 this delta when upstream supports isolated, selectable Commit/Welcome candidates
 without advancing the live group, and these tests plus DAVE event-sequence tests
 pass. Preserve the difference from generic RFC staged-commit APIs in that review.
+
+## MLS-BATCH-01: transactional Proposal batches
+
+Base: MLS-CANDIDATE-01 (`3bc959b`). Reference: libdave `b5463c4`,
+ProcessProposals. `ApplyProposalBatch` authenticates and applies appended public
+Proposals or revocations to a deserialized group copy, and persists only after
+all inputs pass. Repeated ProposalRefs and unknown/repeated revocations reject
+the batch. DAVE sender/type/participant checks remain the caller's responsibility.
+Existing single-message APIs keep their behavior.
+
+`TestProposalBatchAtomicRejection` checks unchanged persisted state for duplicate,
+malformed and unknown-revoke inputs. DAVE integration additionally checks a valid
+prefix followed by an invalid signature, and full revocation of two separately
+received proposals. This provides atomic validation, not durable-store multi-write
+transactions; the same persistence limitation as MLS-CANDIDATE-01 applies.
+
+Status: fork-only, not deployed. Replace when upstream provides batch validation
+with no state mutation on any rejected element and these regressions pass. Keep
+this policy separate from a claim that DAVE explicitly requires batch atomicity.
