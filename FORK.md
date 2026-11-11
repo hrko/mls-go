@@ -72,7 +72,14 @@ the candidate's serialized private-state buffers, not all heap copies made by ML
 Validation: `go test . -run TestCommitCandidate -count=1` covers independent
 generation, selecting a candidate, stale/foreign/discarded candidates, changed
 proposals, closed clients, cancelled contexts and matching Welcome exporter keys.
-Full integration and persistence-failure/concurrency validation remain pending.
+`TestCommitCandidateSaveFailureRetry` injects failure in SaveGroupState with
+CacheNone and CacheAlways: persisted state and visible epoch remain unchanged,
+and retry adopts the same candidate. `TestCommitCandidateConcurrentAdoption`
+checks that exactly one of two competing candidates is adopted. These tests do
+not establish atomicity across SaveGroupState and subsequent key-store writes;
+that remains the durable-store limitation described above. DAVE integration
+checks selecting either implementation's candidate after split Add and Revoke
+against official libdave 1.1.0/cpp; deployment verification is still pending.
 
 Status: fork-only, not yet deployed. No upstream PR exists. Remove or replace
 this delta when upstream supports isolated, selectable Commit/Welcome candidates
