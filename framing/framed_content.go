@@ -148,6 +148,12 @@ func unmarshalFramedContentFromReader(r *tls.Reader) (*FramedContent, error) {
 }
 
 func unmarshalFramedContentFromReaderWithMode(r *tls.Reader, expectsTrailingAuth, withMembershipTag bool) (*FramedContent, error) {
+	return unmarshalFramedContentWithBodyReader(r, func(r *tls.Reader, ct ContentType, sender SenderType) (FramedContentBody, error) {
+		return readFramedContentBody(r, ct, withMembershipTag && sender == SenderTypeMember, expectsTrailingAuth)
+	})
+}
+
+func unmarshalFramedContentWithBodyReader(r *tls.Reader, readBody func(*tls.Reader, ContentType, SenderType) (FramedContentBody, error)) (*FramedContent, error) {
 	groupID, err := r.ReadVLBytes()
 	if err != nil {
 		return nil, fmt.Errorf("framing: reading group_id: %w", err)
@@ -168,8 +174,7 @@ func unmarshalFramedContentFromReaderWithMode(r *tls.Reader, expectsTrailingAuth
 	if err != nil {
 		return nil, fmt.Errorf("framing: reading content_type: %w", err)
 	}
-	hasMembershipTag := withMembershipTag && sender.Type == SenderTypeMember
-	body, err := readFramedContentBody(r, ContentType(ct), hasMembershipTag, expectsTrailingAuth)
+	body, err := readBody(r, ContentType(ct), sender.Type)
 	if err != nil {
 		return nil, err
 	}
